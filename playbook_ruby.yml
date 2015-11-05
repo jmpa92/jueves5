@@ -1,0 +1,37 @@
+- hosts: myservers
+  remote_user: sysadmin
+  gather_facts: no
+
+  tasks:
+    - name: Install packages
+      yum: name={{ item }} state=latest
+      with_items:
+        - openssl-devel
+        - zlib
+        - zlib-devel
+        - zlib.i686
+    - name: Generate /tmp dir
+      file: path=~/tmp state=directory mode=0755
+    - name: Download the code
+      get_url: url={{ item }} dest=~/tmp 
+      with_items:
+        - "http://cache.ruby-lang.org/pub/ruby/2.2/ruby-2.2.3.tar.gz"
+        - "https://rubygems.org/rubygems/rubygems-2.4.8.tgz"
+    - name: Unpack code
+      unarchive: src=~/tmp/{{ item }} dest=~/tmp
+      with_items:
+        - ruby-2.2.3.tar.gz
+        - rubygems-2.4.8.tgz
+    - name: configure Ruby 2.2.3 before install
+      command: chdir=~/tmp/ruby-2.2.3 ./configure --prefix=$HOME --disable-install-doc --with-system-zlib
+    - name: make
+      command: chdir=~/tmp/ruby-2.2.3 make
+    - name: make install
+      command: chdir=~/tmp/ruby-2.2.3 make install
+    - name: Generate gems dir
+      file: path=~/gems state=directory mode=0755
+    - name: Install rubygems
+      command: chdir=~/tmp/rubygems-2.4.8 ~/bin/ruby setup.rb
+      environment:
+        GEM_HOME: ~/gems
+
