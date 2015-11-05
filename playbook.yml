@@ -1,0 +1,6 @@
+- hosts: myservers
+  remote_user: sysadmin
+
+  tasks:
+    - name: Run a simple task
+      command: ls
